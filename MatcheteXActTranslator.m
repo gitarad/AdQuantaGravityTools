@@ -26,8 +26,6 @@ matcheteToXActHeads = <|
   "LeviCivitaSymbol" -> "EpsilonSymbol",
   "Metric"           -> "Metric",
   "KroneckerDelta"   -> "Delta",
-  "CovariantD"       -> "CD",
-  "PartialD"         -> "PD",
   "ChristoffelSymbol"-> "Christoffel",
   "RicciTensor"      -> "Ricci",
   "RiemannTensor"    -> "Riemann"
@@ -97,33 +95,20 @@ MatcheteToXActInternal[expr_Plus,translationRules_] := Plus @@ (sanitizeMonomial
 MatcheteToXActInternal[expr_,translationRules_]      := sanitizeMonomial[translateTermMatchete[expr,translationRules]];
 MatcheteToXAct[expr_,translationRules_] := MatcheteToXActInternal[Distribute[expr, Plus], translationRules];
 
-(* --- xAct -> Matchete translator remains unchanged --- *)
-clearPD[expr_] := Module[{tmp = expr, d = {}},
-  While[MatchQ[tmp, PD[_][_] ],
-    d = Append[d, First@Replace[tmp, PD[i_][_] :> i]];
-    tmp = Replace[tmp, PD[_][inner_] :> inner];
-  ];
-  {tmp, d}
-];
 
-translateExprXAct[expr_] := Module[{base, derivs},
-  {base, derivs} = clearPD[expr];
-  Which[
-    Head[base] === Symbol,
-      Field[base, Matchete`Scalar, {}, derivs],
-    True,
-      Field[Head[base],
-        If[Length[List @@ base] == 2,
-           Graviton @@ (List @@ base),
-           Head[base] @@ (List @@ base)
-        ], {}, derivs]
-  ]
-];
+stripMinus[x_]:=x/.{-a_->a};
+replaceCD[expr_]:=expr/.{PD[idx_][val_]:>CD[stripMinus[idx],replaceCD[val]],CD[idx_][val_]:>CD[stripMinus[idx],replaceCD[val]]};
+printAndReturn[expr_]:=(Print[ToString[expr]];expr);
+LI=xAct`xTensor`LI;
+XActToMatcheteInternal[expr_,translationRules_]:=replaceCD[(expr /. {hh_[LI[order_],idx1_,idx2_]
+															:>If[order==1,(hh/.translationRules)[stripMinus[idx1],stripMinus[idx2]],0]}/.{
+															hh_[idx1_,idx2_]/;MatchQ[hh, Alternatives @@ (First /@ translationRules)]:>
+															(hh/.translationRules)[stripMinus[idx1],stripMinus[idx2]]})];
 
-XActToMatchete[expr_Plus] := Plus @@ (XActToMatchete /@ List @@ expr);
-XActToMatchete[expr_] := Module[{e = expr},
+XActToMatchete[expr_Plus,translationRules_] := Plus @@ ((XActToMatchete[#,translationRules] &) /@ List @@ expr);
+XActToMatchete[expr_,translationRules_] := Module[{e = expr},
   e = translateHeads[e, xActToMatcheteHeads];
-  translateExprXAct[e]
+  XActToMatcheteInternal[e,translationRules]
 ];
 
 End[];
