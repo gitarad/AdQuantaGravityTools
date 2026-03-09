@@ -103,7 +103,7 @@ LI=xAct`xTensor`LI;
 XActToMatcheteInternal[expr_,translationRules_]:=replaceCD[(expr /. {hh_[LI[order_],idx1_,idx2_]
 															:>If[order==1,(hh/.translationRules)[stripMinus[idx1],stripMinus[idx2]],0]}/.{
 															hh_[idx1_,idx2_]/;MatchQ[hh, Alternatives @@ (First /@ translationRules)]:>
-															(hh/.translationRules)[stripMinus[idx1],stripMinus[idx2]]})];
+															(hh/.translationRules)[stripMinus[idx1],stripMinus[idx2]]}/.translationRules)];
 
 XActToMatchete[expr_Plus,translationRules_] := Plus @@ ((XActToMatchete[#,translationRules] &) /@ List @@ expr);
 XActToMatchete[expr_,translationRules_] := Module[{e = expr},
