@@ -38,6 +38,7 @@ translatedPert=perturbation/. {CD[a_]:>PD[a],H[LI[order_],a_,b_]:>If[order==1,r[
 LagUV=FreeLag[\[Phi]]+(XActToMatchete[translatedPert,{r->h,\[CurlyPhi]->\[Phi],\[CurlyPhi]c->\[Phi]bar}]/.{\[Kappa]->\[Kappa][],M->M[]});
 Print["Matching"]
 $dontCheckLagrangian=True;
+$printProgress=True;
 LEFT0 = Match[LagUV, LoopOrder -> 1, EFTOrder -> 6];
 Print["Saving result"]
 DumpSave["LEFT.mx", {LEFT0}];
